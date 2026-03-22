@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Quiz da Iara ULTRA PRO</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  color: white;
+  text-align: center;
+  background: linear-gradient(120deg, #001f3f, #0074D9);
+}
+
+canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+.container { max-width: 700px; margin: auto; padding: 20px; }
+
+button {
+  width: 220px;
+  padding: 12px;
+  margin: 10px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.card {
+  background: rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 20px;
+}
+
+#tempo.urgente { color: red; animation: piscar 0.5s infinite; }
+
+@keyframes piscar {
+  0% {opacity:1;}
+  50% {opacity:0.3;}
+  100% {opacity:1;}
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="container">
+<h1>🌊 Quiz da Iara ULTRA PRO 🌊</h1>
+
+<div id="inicio">
+<input id="nome" placeholder="Seu nome"><br><br>
+<button onclick="iniciar()">Começar</button>
+</div>
+
+<div id="jogo" style="display:none">
+<div id="pontuacao">Pontuação: 0</div>
+<div id="tempo">⏱️ 10</div>
+<div id="quiz" class="card"></div>
+</div>
+
+<div id="fim"></div>
+</div>
+
+<script>
+
+// 🌊 FUNDO ANIMADO
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let bolhas = [];
+for(let i=0;i<60;i++){
+  bolhas.push({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    r: Math.random()*3
+  });
+}
+
+function animar(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle="rgba(0,200,255,0.3)";
+
+  bolhas.forEach(b=>{
+    ctx.beginPath();
+    ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
+    ctx.fill();
+
+    b.y -= 0.5;
+    if(b.y<0) b.y=canvas.height;
+  });
+
+  requestAnimationFrame(animar);
+}
+animar();
+
+// ❓ PERGUNTAS (10)
+const perguntas = [
+ {p:"Quem é Iara?", op:["Deusa","Sereia","Humana"], c:1},
+ {p:"Onde ela vive?", op:["Rio","Cidade","Deserto"], c:0},
+ {p:"O que causou sua transformação?", op:["Magia","Castigo do pai","Deus"], c:1},
+ {p:"Por que seus irmãos tinham inveja?", op:["Beleza","Habilidade","Riqueza"], c:1},
+ {p:"O que aconteceu com Iara após o castigo?", op:["Virou pássaro","Virou sereia","Sumiu"], c:1},
+ {p:"Como ela atrai os homens?", op:["Força","Canto","Magia visual"], c:1},
+ {p:"O que acontece com quem segue Iara?", op:["Fica rico","Desaparece","Vira guerreiro"], c:1},
+ {p:"Onde a lenda da Iara é mais conhecida?", op:["Amazônia","Europa","Ásia"], c:0},
+ {p:"Qual outro nome da Iara?", op:["Rainha do Mar","Mãe d’Água","Sereia Azul"], c:1},
+ {p:"O que a lenda da Iara representa?", op:["Natureza","Tecnologia","Guerra"], c:0}
+];
+
+let atual=0, pontos=0, tempo=10, timer, nome="";
+
+function iniciar(){
+  nome = document.getElementById("nome").value;
+  if(!nome){ alert("Digite seu nome"); return; }
+
+  document.getElementById("inicio").style.display="none";
+  document.getElementById("jogo").style.display="block";
+  mostrar();
+}
+
+function mostrar(){
+  let q = perguntas[atual];
+
+  let div = document.getElementById("quiz");
+  div.innerHTML = `<h3>${q.p}</h3>`;
+
+  q.op.forEach((op,i)=>{
+    div.innerHTML += `<button onclick="responder(${i})">${op}</button><br>`;
+  });
+
+  iniciarTempo();
+}
+
+function iniciarTempo(){
+  tempo = 10;
+  let t = document.getElementById("tempo");
+
+  t.classList.remove("urgente");
+  t.innerText = "⏱️ " + tempo;
+
+  clearInterval(timer);
+
+  timer = setInterval(()=>{
+    tempo--;
+    t.innerText = "⏱️ " + tempo;
+
+    if(tempo<=3) t.classList.add("urgente");
+
+    if(tempo<=0){
+      clearInterval(timer);
+      responder(-1);
+    }
+  },1000);
+}
+
+function responder(i){
+  clearInterval(timer);
+
+  let correta = perguntas[atual].c;
+
+  if(i === correta){
+    pontos += 10;
+  } else {
+    pontos -= 5;
+  }
+
+  document.getElementById("pontuacao").innerText = "Pontuação: "+pontos;
+
+  atual++;
+
+  if(atual<perguntas.length){
+    mostrar();
+  } else {
+    finalizar();
+  }
+}
+
+function finalizar(){
+  document.getElementById("jogo").style.display="none";
+
+  let nivel = pontos < 20 ? "Iniciante"
+            : pontos < 50 ? "Intermediário"
+            : "Mestre";
+
+  document.getElementById("fim").innerHTML = `
+    <h2>🏆 Fim de jogo</h2>
+    <h3>${nome}, você fez ${pontos} pontos</h3>
+    <h3>Nível: ${nivel}</h3>
+    <button onclick="location.reload()">Jogar novamente</button>
+  `;
+}
+
+</script>
+</body>
+</html>
