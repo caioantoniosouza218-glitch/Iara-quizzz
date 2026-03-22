@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Quiz da Iara ULTRA PRO</title>
+<title>Quiz da Iara - GOD</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600&display=swap" rel="stylesheet">
 
@@ -10,19 +10,17 @@
 body {
   margin: 0;
   font-family: 'Poppins', sans-serif;
+  background: linear-gradient(120deg, #001f3f, #0074D9);
   color: white;
   text-align: center;
-  background: linear-gradient(120deg, #001f3f, #0074D9);
+  transition: 0.5s;
 }
 
-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: -1;
+.container {
+  max-width: 700px;
+  margin: auto;
+  padding: 20px;
 }
-
-.container { max-width: 700px; margin: auto; padding: 20px; }
 
 button {
   width: 220px;
@@ -32,91 +30,107 @@ button {
   border: none;
   cursor: pointer;
   font-weight: bold;
+  transition: 0.3s;
+}
+
+button:hover {
+  transform: scale(1.05);
+  background: #00d4ff;
+  color: black;
+}
+
+#pontuacao { font-size: 22px; }
+#animacao { font-size: 28px; height: 40px; }
+#tempo { font-size: 20px; margin: 10px; }
+
+.barra {
+  width: 100%;
+  background: #333;
+  border-radius: 10px;
+  overflow: hidden;
+  margin: 15px 0;
+}
+
+.progresso {
+  height: 10px;
+  width: 0%;
+  background: #00ffcc;
+  transition: 0.5s;
 }
 
 .card {
   background: rgba(255,255,255,0.1);
   padding: 20px;
   border-radius: 20px;
+  animation: fade 0.5s;
 }
 
-#tempo.urgente { color: red; animation: piscar 0.5s infinite; }
+img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  border-radius: 15px;
+  margin-top: 10px;
+}
 
-@keyframes piscar {
-  0% {opacity:1;}
-  50% {opacity:0.3;}
-  100% {opacity:1;}
+@keyframes fade {
+  from {opacity:0; transform: translateY(20px);}
+  to {opacity:1; transform: translateY(0);}
 }
 </style>
 </head>
 
 <body>
-
-<canvas id="bg"></canvas>
-
 <div class="container">
-<h1>🌊 Quiz da Iara ULTRA PRO 🌊</h1>
+
+<h1>🌊 Quiz da Iara 🌊</h1>
 
 <div id="inicio">
-<input id="nome" placeholder="Seu nome"><br><br>
-<button onclick="iniciar()">Começar</button>
+  <input id="nome" placeholder="Seu nome"><br><br>
+  <button onclick="iniciar()">Começar</button>
 </div>
 
 <div id="jogo" style="display:none">
-<div id="pontuacao">Pontuação: 0</div>
-<div id="tempo">⏱️ 10</div>
-<div id="quiz" class="card"></div>
+  <div id="pontuacao">Pontuação: 0</div>
+  <div id="tempo">⏱️ 10</div>
+  <div id="animacao"></div>
+
+  <div class="barra">
+    <div id="barra" class="progresso"></div>
+  </div>
+
+  <img id="img">
+  <div id="quiz" class="card"></div>
 </div>
 
 <div id="fim"></div>
+<div id="ranking"></div>
+
 </div>
 
 <script>
 
-// 🌊 FUNDO ANIMADO
-const canvas = document.getElementById("bg");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// 🔊 sons
+const somAcerto = new Audio("https://www.soundjay.com/buttons/sounds/button-3.mp3");
+const somErro = new Audio("https://www.soundjay.com/buttons/sounds/button-10.mp3");
 
-let bolhas = [];
-for(let i=0;i<60;i++){
-  bolhas.push({
-    x: Math.random()*canvas.width,
-    y: Math.random()*canvas.height,
-    r: Math.random()*3
-  });
-}
+// 🌊 imagens
+const imagens = [
+ "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+ "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+ "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+ "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"
+];
 
-function animar(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  ctx.fillStyle="rgba(0,200,255,0.3)";
-
-  bolhas.forEach(b=>{
-    ctx.beginPath();
-    ctx.arc(b.x,b.y,b.r,0,Math.PI*2);
-    ctx.fill();
-
-    b.y -= 0.5;
-    if(b.y<0) b.y=canvas.height;
-  });
-
-  requestAnimationFrame(animar);
-}
-animar();
-
-// ❓ PERGUNTAS (10)
+// ❓ perguntas
 const perguntas = [
- {p:"Quem é Iara?", op:["Deusa","Sereia","Humana"], c:1},
- {p:"Onde ela vive?", op:["Rio","Cidade","Deserto"], c:0},
- {p:"O que causou sua transformação?", op:["Magia","Castigo do pai","Deus"], c:1},
- {p:"Por que seus irmãos tinham inveja?", op:["Beleza","Habilidade","Riqueza"], c:1},
- {p:"O que aconteceu com Iara após o castigo?", op:["Virou pássaro","Virou sereia","Sumiu"], c:1},
- {p:"Como ela atrai os homens?", op:["Força","Canto","Magia visual"], c:1},
- {p:"O que acontece com quem segue Iara?", op:["Fica rico","Desaparece","Vira guerreiro"], c:1},
- {p:"Onde a lenda da Iara é mais conhecida?", op:["Amazônia","Europa","Ásia"], c:0},
- {p:"Qual outro nome da Iara?", op:["Rainha do Mar","Mãe d’Água","Sereia Azul"], c:1},
- {p:"O que a lenda da Iara representa?", op:["Natureza","Tecnologia","Guerra"], c:0}
+ {p:"O que causou a transformação da Iara?", op:["Magia","Castigo do pai","Deus"], c:1},
+ {p:"Por que os irmãos tinham inveja?", op:["Beleza","Habilidade","Riqueza"], c:1},
+ {p:"Quem salvou Iara?", op:["Peixes","Pajé","Deus"], c:0},
+ {p:"Onde ela vive?", op:["Amazônia","Sul","Cidade"], c:0},
+ {p:"O que o canto faz?", op:["Mata","Encanta","Nada"], c:1},
+ {p:"Como ela atrai homens?", op:["Força","Canto","Luz"], c:1},
+ {p:"Como ficam os que voltam?", op:["Normais","Loucos","Fortes"], c:1}
 ];
 
 let atual=0, pontos=0, tempo=10, timer, nome="";
@@ -133,6 +147,8 @@ function iniciar(){
 function mostrar(){
   let q = perguntas[atual];
 
+  document.getElementById("img").src = imagens[atual % imagens.length];
+
   let div = document.getElementById("quiz");
   div.innerHTML = `<h3>${q.p}</h3>`;
 
@@ -140,25 +156,20 @@ function mostrar(){
     div.innerHTML += `<button onclick="responder(${i})">${op}</button><br>`;
   });
 
+  atualizarBarra();
   iniciarTempo();
 }
 
 function iniciarTempo(){
   tempo = 10;
-  let t = document.getElementById("tempo");
-
-  t.classList.remove("urgente");
-  t.innerText = "⏱️ " + tempo;
+  document.getElementById("tempo").innerText = "⏱️ " + tempo;
 
   clearInterval(timer);
-
   timer = setInterval(()=>{
     tempo--;
-    t.innerText = "⏱️ " + tempo;
+    document.getElementById("tempo").innerText = "⏱️ " + tempo;
 
-    if(tempo<=3) t.classList.add("urgente");
-
-    if(tempo<=0){
+    if(tempo <= 0){
       clearInterval(timer);
       responder(-1);
     }
@@ -169,22 +180,37 @@ function responder(i){
   clearInterval(timer);
 
   let correta = perguntas[atual].c;
+  let anim = document.getElementById("animacao");
 
   if(i === correta){
     pontos += 10;
+    anim.innerHTML = "✅ +10";
+    anim.style.color = "#00ff88";
+    somAcerto.play();
   } else {
     pontos -= 5;
+    anim.innerHTML = "❌ -5";
+    anim.style.color = "#ff4d4d";
+    somErro.play();
   }
 
-  document.getElementById("pontuacao").innerText = "Pontuação: "+pontos;
+  document.getElementById("pontuacao").innerText = "Pontuação: " + pontos;
 
   atual++;
 
-  if(atual<perguntas.length){
-    mostrar();
-  } else {
-    finalizar();
-  }
+  setTimeout(()=>{
+    anim.innerHTML="";
+    if(atual < perguntas.length){
+      mostrar();
+    } else {
+      finalizar();
+    }
+  },800);
+}
+
+function atualizarBarra(){
+  let progresso = (atual / perguntas.length) * 100;
+  document.getElementById("barra").style.width = progresso + "%";
 }
 
 function finalizar(){
@@ -194,14 +220,29 @@ function finalizar(){
             : pontos < 50 ? "Intermediário"
             : "Mestre";
 
+  let ranking = JSON.parse(localStorage.getItem("ranking")) || [];
+  ranking.push({nome,pontos});
+  ranking.sort((a,b)=>b.pontos-a.pontos);
+  ranking = ranking.slice(0,5);
+  localStorage.setItem("ranking", JSON.stringify(ranking));
+
   document.getElementById("fim").innerHTML = `
-    <h2>🏆 Fim de jogo</h2>
-    <h3>${nome}, você fez ${pontos} pontos</h3>
+    <h2>🏆 Fim de Jogo</h2>
+    <h3>${nome}, sua pontuação: ${pontos}</h3>
     <h3>Nível: ${nivel}</h3>
     <button onclick="location.reload()">Jogar novamente</button>
   `;
+
+  let div = document.getElementById("ranking");
+  div.innerHTML = "<h3>🏆 Ranking</h3>";
+
+  ranking.forEach(r=>{
+    div.innerHTML += `<p>${r.nome} - ${r.pontos}</p>`;
+  });
 }
 
 </script>
 </body>
 </html>
+
+
